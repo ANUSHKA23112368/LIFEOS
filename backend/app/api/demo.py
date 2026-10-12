@@ -25,6 +25,8 @@ async def seed_demo_data(current_user: dict = Depends(get_current_user)):
         await db.habits.insert_one(hab)
     for gol in dataset["goals"]:
         await db.goals.insert_one(gol)
+    for jnl in dataset.get("journal_entries", []):
+        await db.journal_entries.insert_one(jnl)
     for rev in dataset["daily_reviews"]:
         # Update or insert
         await db.daily_reviews.update_one(
@@ -33,7 +35,7 @@ async def seed_demo_data(current_user: dict = Depends(get_current_user)):
             upsert=True
         )
 
-    return {"status": "success", "message": "Sample activities, tasks, focus sessions, habits, and goals loaded."}
+    return {"status": "success", "message": "Sample activities, tasks, focus sessions, habits, goals, and journal entries loaded."}
 
 @router.post("/clear")
 async def clear_data(current_user: dict = Depends(get_current_user)):
@@ -41,6 +43,8 @@ async def clear_data(current_user: dict = Depends(get_current_user)):
     db = get_db()
     uid = current_user["id"]
     await db.activities.delete_many({"user_id": uid})
+    await db.journal_entries.delete_many({"user_id": uid})
+    await db.daily_summaries.delete_many({"user_id": uid})
     await db.tasks.delete_many({"user_id": uid})
     await db.focus_sessions.delete_many({"user_id": uid})
     await db.habits.delete_many({"user_id": uid})

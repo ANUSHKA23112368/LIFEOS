@@ -53,9 +53,17 @@ class DeleteResult:
         self.deleted_count = deleted_count
 
 
+import json
+import os
+from pathlib import Path
+
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+DATA_FILE = DATA_DIR / "lifeos_database.json"
+
 class InMemoryCollection:
-    def __init__(self, name: str):
+    def __init__(self, name: str, parent_db=None):
         self.name = name
+        self.parent_db = parent_db
         self._docs: List[Dict[str, Any]] = []
         self._lock = asyncio.Lock()
 
@@ -85,12 +93,17 @@ class InMemoryCollection:
                     return False
         return True
 
+    async def _notify_change(self):
+        if self.parent_db:
+            await self.parent_db.save_to_disk()
+
     async def insert_one(self, document: Dict[str, Any]) -> InsertOneResult:
         async with self._lock:
             doc = dict(document)
             if "_id" not in doc:
                 doc["_id"] = str(uuid.uuid4())
             self._docs.append(doc)
+            await self._notify_change()
             return InsertOneResult(doc["_id"])
 
     async def find_one(self, filter: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -118,6 +131,7 @@ class InMemoryCollection:
                         for pk, pv in update["$push"].items():
                             doc.setdefault(pk, []).append(pv)
                     self._docs[i] = doc
+                    await self._notify_change()
                     return UpdateResult(1, 1)
 
             if upsert:
@@ -127,6 +141,7 @@ class InMemoryCollection:
                 if "_id" not in new_doc:
                     new_doc["_id"] = str(uuid.uuid4())
                 self._docs.append(new_doc)
+                await self._notify_change()
                 return UpdateResult(0, 1)
 
             return UpdateResult(0, 0)
@@ -136,6 +151,7 @@ class InMemoryCollection:
             for i, doc in enumerate(self._docs):
                 if self._matches(doc, filter):
                     self._docs.pop(i)
+                    await self._notify_change()
                     return DeleteResult(1)
             return DeleteResult(0)
 
@@ -143,6 +159,8 @@ class InMemoryCollection:
         async with self._lock:
             before = len(self._docs)
             self._docs = [doc for doc in self._docs if not self._matches(doc, filter)]
+            if len(self._docs) != before:
+                await self._notify_change()
             return DeleteResult(before - len(self._docs))
 
     async def count_documents(self, filter: Dict[str, Any]) -> int:
@@ -157,10 +175,46 @@ class InMemoryDatabase:
     def __init__(self, name: str):
         self.name = name
         self._collections: Dict[str, InMemoryCollection] = {}
+        self._load_from_disk()
+
+    def _load_from_disk(self):
+        if os.environ.get("TESTING") == "1" or "test" in self.name.lower():
+            return
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            if DATA_FILE.exists():
+                with open(DATA_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for col_name, docs in data.items():
+                        col = InMemoryCollection(col_name, parent_db=self)
+                        col._docs = docs
+                        self._collections[col_name] = col
+                logger.info(f"Loaded persistent database from {DATA_FILE}")
+        except Exception as e:
+            logger.warning(f"Could not load database file: {e}")
+
+    async def save_to_disk(self):
+        if os.environ.get("TESTING") == "1" or "test" in self.name.lower():
+            return
+        try:
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            data = {}
+            for col_name, col in self._collections.items():
+                data[col_name] = col._docs
+            temp_file = DATA_FILE.with_suffix(".tmp")
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, default=str)
+            if temp_file.exists():
+                temp_file.replace(DATA_FILE)
+        except Exception as e:
+            logger.warning(f"Could not save database file: {e}")
+
+    def clear(self):
+        self._collections.clear()
 
     def __getitem__(self, item: str) -> InMemoryCollection:
         if item not in self._collections:
-            self._collections[item] = InMemoryCollection(item)
+            self._collections[item] = InMemoryCollection(item, parent_db=self)
         return self._collections[item]
 
     def __getattr__(self, name: str) -> InMemoryCollection:

@@ -19,6 +19,8 @@ import { InsightsPage } from './pages/InsightsPage';
 import { AiAnalystPage } from './pages/AiAnalystPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { JournalPage } from './pages/JournalPage';
+import { DailySummaryPage } from './pages/DailySummaryPage';
 
 // Protected Route Wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,6 +56,8 @@ export const App: React.FC = () => {
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/timeline" element={<ProtectedRoute><TimelinePage /></ProtectedRoute>} />
             <Route path="/planner" element={<ProtectedRoute><PlannerPage /></ProtectedRoute>} />
+            <Route path="/journal" element={<ProtectedRoute><JournalPage /></ProtectedRoute>} />
+            <Route path="/daily-summary" element={<ProtectedRoute><DailySummaryPage /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
             <Route path="/focus" element={<ProtectedRoute><FocusPage /></ProtectedRoute>} />
             <Route path="/habits" element={<ProtectedRoute><HabitsPage /></ProtectedRoute>} />

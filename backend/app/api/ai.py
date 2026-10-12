@@ -58,6 +58,13 @@ async def query_ai_analyst(
     goal_cursor = db.goals.find({"user_id": current_user["id"]})
     goals = await goal_cursor.to_list(length=100)
 
+    journal_cursor = db.journal_entries.find({
+        "user_id": current_user["id"],
+        "date": {"$gte": start_str, "$lte": end_str},
+        "archived": False
+    })
+    journal_entries = await journal_cursor.to_list(length=100)
+
     categories = current_user.get("preferences", {}).get("custom_categories", [])
 
     # Deterministically calculate real stats
@@ -76,6 +83,19 @@ async def query_ai_analyst(
     context = analytics.model_dump()
     context["user_name"] = current_user.get("name", "User")
     context["occupation"] = current_user.get("preferences", {}).get("occupation", "professional")
+    context["journal_entries"] = [
+        {
+            "id": j["id"],
+            "title": j["title"],
+            "date": j["date"],
+            "time": j.get("time"),
+            "content": j["content"],
+            "mood": j.get("mood"),
+            "achievements": j.get("achievements", []),
+            "lessons_learned": j.get("lessons_learned", [])
+        }
+        for j in journal_entries
+    ]
 
     # Generate response
     response = await AiService.analyze_life_data(req.question, context)

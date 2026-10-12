@@ -119,7 +119,11 @@ export interface FocusSession {
 export interface HabitEntry {
   date: string;
   value: number;
+  target_value?: number;
+  unit?: string;
+  status?: string;
   completed: boolean;
+  duration_minutes?: number;
   notes?: string;
 }
 
@@ -129,19 +133,121 @@ export interface Habit {
   name: string;
   description?: string;
   category: string;
+  habit_type?: 'boolean' | 'quantity' | 'duration' | 'count' | 'scheduled';
   frequency: string;
+  selected_weekdays?: string[];
   target: number;
   unit: string;
   start_date: string;
   end_date?: string;
-  status: string;
+  status: 'active' | 'paused' | 'archived';
   color?: string;
+  icon?: string;
+  reminder_time?: string;
+  linked_goal_id?: string;
+  notes?: string;
   current_streak: number;
   longest_streak: number;
   completions: HabitEntry[];
   completion_rate_7d: number;
   completion_rate_30d: number;
+  scheduled_consistency_rate?: number;
   created_at: string;
+}
+
+export interface HabitHeatmapCell {
+  date: string;
+  weekday: string;
+  is_scheduled: boolean;
+  state: 'no_record' | 'partial' | 'achieved' | 'exceeded' | 'failed' | 'unscheduled';
+  value: number;
+  target: number;
+  notes?: string;
+}
+
+export interface HabitTimeseriesPoint {
+  date: string;
+  day_label: string;
+  weekday: string;
+  value: number;
+  target: number;
+  completed: boolean;
+  is_scheduled: boolean;
+}
+
+export interface HabitAnalytics {
+  habit_id: string;
+  name: string;
+  unit: string;
+  target: number;
+  habit_type: string;
+  range_days: number;
+  scheduled_opportunities: number;
+  scheduled_completed: number;
+  consistency_percentage: number;
+  timeseries: HabitTimeseriesPoint[];
+  heatmap: HabitHeatmapCell[];
+  insights: string[];
+}
+
+export interface JournalEntry {
+  id: string;
+  user_id: string;
+  title: string;
+  date: string;
+  time?: string;
+  content: string;
+  category: string;
+  tags: string[];
+  mood?: string;
+  energy_rating?: number;
+  people_mentioned: string[];
+  events_mentioned: string[];
+  achievements: string[];
+  challenges: string[];
+  lessons_learned: string[];
+  gratitude_notes: string[];
+  word_count: number;
+  archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JournalCalendarDay {
+  date: string;
+  entry_count: number;
+  total_words: number;
+  moods: string[];
+  categories: string[];
+  has_entries: boolean;
+}
+
+export interface DailySummary {
+  id: string;
+  user_id: string;
+  date: string;
+  overview: string;
+  important_events: string[];
+  main_accomplishments: string[];
+  tasks_completed: string[];
+  tasks_incomplete: string[];
+  habits_recorded: Array<{
+    name: string;
+    value: number;
+    unit?: string;
+    status: string;
+  }>;
+  focus_time_minutes: number;
+  focus_sessions_count: number;
+  lessons_and_ideas: string[];
+  variance_analysis: string;
+  user_reflection?: string;
+  priorities_for_tomorrow: string[];
+  is_sparse_data: boolean;
+  source_record_ids: Record<string, unknown>;
+  version: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface GoalMilestone {

@@ -38,5 +38,6 @@ ENV/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-Thumbs.db
+# Temporary & Log files
+*.tmp
+*.log

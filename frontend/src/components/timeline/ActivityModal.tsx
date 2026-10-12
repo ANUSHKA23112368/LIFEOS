@@ -11,6 +11,12 @@ interface ActivityModalProps {
   defaultDate?: string;
   defaultStartTime?: string;
   defaultEndTime?: string;
+  defaultRecordType?: 'actual' | 'planned';
+  initialTitle?: string;
+  initialCategory?: string;
+  initialTaskId?: string;
+  initialGoalId?: string;
+  initialDurationMinutes?: number;
   categories: CategoryItem[];
 }
 
@@ -22,6 +28,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   defaultDate,
   defaultStartTime,
   defaultEndTime,
+  defaultRecordType,
+  initialTitle,
+  initialCategory,
+  initialTaskId,
+  initialGoalId,
+  initialDurationMinutes,
   categories,
 }) => {
   const [title, setTitle] = useState('');
@@ -58,20 +70,42 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         setLinkedGoalId(activityToEdit.linked_goal_id || '');
       } else {
         const todayStr = defaultDate || new Date().toISOString().substring(0, 10);
-        setTitle('');
+        setTitle(initialTitle || '');
         setDescription('');
-        setCategory(categories[0]?.id || 'deep_work');
+        setCategory(initialCategory || categories[0]?.id || 'deep_work');
         setDate(todayStr);
-        setStartTime(defaultStartTime || '09:00');
-        setEndTime(defaultEndTime || '10:00');
-        setRecordType('actual');
+        const sTime = defaultStartTime || '09:00';
+        setStartTime(sTime);
+        if (initialDurationMinutes && initialDurationMinutes > 0) {
+          const [h, m] = sTime.split(':').map(Number);
+          const totalM = (h || 9) * 60 + (m || 0) + initialDurationMinutes;
+          const endH = Math.floor((totalM / 60) % 24).toString().padStart(2, '0');
+          const endM = (totalM % 60).toString().padStart(2, '0');
+          setEndTime(`${endH}:${endM}`);
+        } else {
+          setEndTime(defaultEndTime || '10:00');
+        }
+        setRecordType(defaultRecordType || 'actual');
         setNotes('');
-        setLinkedTaskId('');
-        setLinkedGoalId('');
+        setLinkedTaskId(initialTaskId || '');
+        setLinkedGoalId(initialGoalId || '');
       }
       setError(null);
     }
-  }, [isOpen, activityToEdit, defaultDate, defaultStartTime, defaultEndTime, categories]);
+  }, [
+    isOpen,
+    activityToEdit,
+    defaultDate,
+    defaultStartTime,
+    defaultEndTime,
+    defaultRecordType,
+    initialTitle,
+    initialCategory,
+    initialTaskId,
+    initialGoalId,
+    initialDurationMinutes,
+    categories,
+  ]);
 
   if (!isOpen) return null;
 

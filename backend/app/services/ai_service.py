@@ -98,6 +98,35 @@ class AiService:
                 f"20-30% more optimistic than reality. Allocating buffer periods between tasks directly improves completion rates."
             )
 
+        elif "journal" in q or "diary" in q or "logbook" in q or "entry" in q or "wrote" in q:
+            journals = context.get("journal_entries", [])
+            j_count = len(journals)
+            if j_count > 0:
+                titles = [f"'{j['title']}' ({j['date']})" for j in journals[:3]]
+                insights.append(AiStructuredInsight(
+                    title="Personal Diary & Reflection Themes",
+                    what_i_observed=f"You have recorded {j_count} personal journal entries in this timeframe.",
+                    evidence=f"Recent entries: {', '.join(titles)}.",
+                    possible_explanation="Regular journaling documents real-world insights, emotional state, and personal milestones as they happen.",
+                    suggested_experiment="Review past lessons learned at the end of each week to consolidate behavioral gains.",
+                    how_to_evaluate="Check your consistency in logging lessons across consecutive entries."
+                ))
+                answer = (
+                    f"You have {j_count} saved journal entries in this timeframe. "
+                    f"Your most recent entries include {', '.join(titles)}. "
+                    f"Your writings capture genuine events, accomplishments, and lessons without relying on retrospective guesswork."
+                )
+            else:
+                insights.append(AiStructuredInsight(
+                    title="Journal Data Availability",
+                    what_i_observed="No journal entries were found for the selected timeframe.",
+                    evidence="0 entries recorded in the database.",
+                    possible_explanation="You may not have written any diary entries during this date range yet.",
+                    suggested_experiment="Open My Life Journal and record a 2-minute entry about your key experience today.",
+                    how_to_evaluate="Verify the new entry appears in your timeline and calendar."
+                ))
+                answer = "You haven't recorded any journal entries in this timeframe yet. Open My Life Journal from the sidebar to write your first entry!"
+
         elif "focus" in q or "deep work" in q or "interruption" in q:
             insights.append(AiStructuredInsight(
                 title="Focus Continuity Assessment",

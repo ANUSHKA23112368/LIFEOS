@@ -15,7 +15,9 @@ from app.api import (
     ai,
     reports,
     settings as settings_api,
-    demo
+    demo,
+    journal,
+    daily_summary
 )
 
 @asynccontextmanager
@@ -45,6 +47,8 @@ app.add_middleware(
 # Include Routers under /api
 app.include_router(auth.router, prefix="/api")
 app.include_router(activities.router, prefix="/api")
+app.include_router(journal.router, prefix="/api")
+app.include_router(daily_summary.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(focus.router, prefix="/api")
 app.include_router(habits.router, prefix="/api")

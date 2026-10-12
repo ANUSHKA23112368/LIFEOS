@@ -94,8 +94,22 @@ export const DashboardPage: React.FC = () => {
         {/* Quick Actions Cluster */}
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => navigate('/journal')}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+          >
+            <BookOpen size={14} />
+            <span>Write Journal</span>
+          </button>
+          <button
+            onClick={() => navigate('/daily-summary')}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition"
+          >
+            <Sparkles size={14} />
+            <span>Daily Summary</span>
+          </button>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"
           >
             <Plus size={14} />
             <span>Log Activity</span>
@@ -106,13 +120,6 @@ export const DashboardPage: React.FC = () => {
           >
             <Play size={14} />
             <span>Start Focus</span>
-          </button>
-          <button
-            onClick={() => navigate('/review')}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-600/20 transition"
-          >
-            <BookOpen size={14} />
-            <span>Daily Review</span>
           </button>
         </div>
       </div>

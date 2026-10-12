@@ -540,30 +540,102 @@ class DemoDataService:
             }
         ]
 
-        # Daily Review
-        daily_reviews = [
+        # Journal Entries (Multiple per day across history)
+        journal_entries = [
             {
                 "id": str(uuid.uuid4()),
                 "user_id": user_id,
+                "title": "Morning Clarity & System Intentions",
                 "date": today_str,
-                "accomplishments": "Completed core LIFEOS system design and finished Chapter 4 on distributed consensus.",
-                "challenges_faced": "Slightly under-estimated database model edge cases which pushed the morning block by 30 mins.",
-                "what_went_well": "Deep work focus timer kept me completely off social media.",
-                "distractions_encountered": "Midday email notifications.",
-                "focus_helpers": "Noise-cancelling headphones and lo-fi playlist.",
-                "tomorrow_intentions": "Implement frontend timeline and test edge-case midnight crossing.",
-                "mood_rating": 4,
+                "time": "08:00",
+                "content": "Woke up energized at 07:15. Hydrated with 500ml water and had a wholesome breakfast. Today's primary focus is completing the core architecture and interactive canvas. Setting a firm personal boundary: no notification browsing before midday.",
+                "category": "Personal",
+                "tags": ["morning", "intentions", "focus"],
+                "mood": "great",
+                "energy_rating": 5,
+                "people_mentioned": [],
+                "events_mentioned": ["Morning coffee ritual"],
+                "achievements": ["Woke up promptly without snoozing", "Planned day before opening inbox"],
+                "challenges": [],
+                "lessons_learned": ["Mornings without screen exposure feel twice as calm."],
+                "gratitude_notes": ["Crisp morning light and clean workspace."],
+                "word_count": 48,
+                "archived": False,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Distributed Systems Insights & Architecture",
+                "date": today_str,
+                "time": "15:30",
+                "content": "Had an intense study session on Chapter 4. Key breakthrough: monotonic sequence numbers and write-ahead logging guarantee deterministic state recovery even during sudden crashes. Applying this directly to our client-side persistence.",
+                "category": "Study",
+                "tags": ["learning", "algorithms", "systems"],
+                "mood": "good",
                 "energy_rating": 4,
-                "verified_planned_minutes": 180,
-                "verified_actual_minutes": 375,
-                "verified_tasks_completed": 2,
-                "verified_tasks_remaining": 2,
-                "verified_focus_minutes": 95,
-                "verified_habits_completed": 2,
+                "people_mentioned": ["Professor Vance"],
+                "events_mentioned": ["Chapter 4 study sprint"],
+                "achievements": ["Completed 25 pages of dense technical reading"],
+                "challenges": ["Proof of safety required re-reading 3 times."],
+                "lessons_learned": ["Break complex proofs into small invariant statements."],
+                "gratitude_notes": ["Access to clear reference textbooks."],
+                "word_count": 45,
+                "archived": False,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Evening Reflection & Grounded Progress",
+                "date": today_str,
+                "time": "21:45",
+                "content": "Reflecting on today's execution: finished 2 key tasks, logged 95 minutes of focused flow, and completed strength training. The morning session ran 30 minutes over plan, which proves the need for 15-minute buffers between blocks. Feeling grateful and centered.",
+                "category": "Reflection",
+                "tags": ["reflection", "evening", "wellness"],
+                "mood": "great",
+                "energy_rating": 4,
+                "people_mentioned": [],
+                "events_mentioned": ["Evening mobility workout"],
+                "achievements": ["Logged 95m focus", "Completed strength routine"],
+                "challenges": ["Slight afternoon energy dip around 14:00."],
+                "lessons_learned": ["A 10-minute walk after lunch completely eliminates the afternoon slump."],
+                "gratitude_notes": ["Consistent progress on long-term personal goals."],
+                "word_count": 52,
+                "archived": False,
                 "created_at": now.isoformat(),
                 "updated_at": now.isoformat()
             }
         ]
+
+        # Add entries on previous days for search & calendar exploration
+        for d_offset in [1, 2, 4, 7, 10, 14, 20]:
+            past_dt = today - timedelta(days=d_offset)
+            past_str = past_dt.strftime("%Y-%m-%d")
+            journal_entries.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": f"Daily Log & Reflection for {past_dt.strftime('%A, %b %d')}",
+                "date": past_str,
+                "time": "20:30",
+                "content": f"Reviewing day -{d_offset}: sustained solid flow in deep work blocks, maintained consistent hydration, and pushed forward on software milestones. Every day of consistent tracking brings more clarity on personal energy rhythms.",
+                "category": "Personal" if d_offset % 2 == 0 else "Study",
+                "tags": ["daily-log", "progress", "habits"],
+                "mood": "good" if d_offset % 3 != 0 else "great",
+                "energy_rating": 4,
+                "people_mentioned": [],
+                "events_mentioned": [f"Day -{d_offset} focus blocks"],
+                "achievements": [f"Completed day -{d_offset} scheduled tasks"],
+                "challenges": ["Minor scheduling variances."],
+                "lessons_learned": ["Consistency compounds over weeks."],
+                "gratitude_notes": ["Good health and dedicated focus time."],
+                "word_count": 42,
+                "archived": False,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
 
         return {
             "activities": activities,
@@ -571,5 +643,6 @@ class DemoDataService:
             "focus_sessions": focus_sessions,
             "habits": habits,
             "goals": goals,
-            "daily_reviews": daily_reviews
+            "daily_reviews": daily_reviews,
+            "journal_entries": journal_entries
         }

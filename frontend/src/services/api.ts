@@ -12,7 +12,10 @@ import {
   AiQueryResponse,
   AiChatMessage,
   OverlapItem,
-  UnloggedGap
+  UnloggedGap,
+  JournalEntry,
+  JournalCalendarDay,
+  DailySummary
 } from '../types';
 
 const API_BASE = '/api';
@@ -121,17 +124,97 @@ export const api = {
     request<FocusSession>(`/focus/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   // Habits
-  getHabits: () =>
-    request<Habit[]>('/habits'),
+  getHabits: (statusFilter?: string) =>
+    request<Habit[]>(`/habits${statusFilter ? `?status_filter=${statusFilter}` : ''}`),
+
+  getHabit: (id: string) =>
+    request<Habit>(`/habits/${id}`),
 
   createHabit: (data: Partial<Habit>) =>
     request<Habit>('/habits', { method: 'POST', body: JSON.stringify(data) }),
 
-  checkinHabit: (id: string, data: { date: string; value?: number; completed: boolean; notes?: string }) =>
+  updateHabit: (id: string, data: Partial<Habit>) =>
+    request<Habit>(`/habits/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  checkinHabit: (id: string, data: { date: string; value?: number; completed: boolean; status?: string; duration_minutes?: number; notes?: string }) =>
     request<Habit>(`/habits/${id}/checkin`, { method: 'POST', body: JSON.stringify(data) }),
 
+  correctHabitHistory: (id: string, date: string, data: { value?: number; completed: boolean; status?: string; duration_minutes?: number; notes?: string }) =>
+    request<Habit>(`/habits/${id}/history/${date}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  getHabitAnalytics: (id: string, rangeDays = 30) =>
+    request<any>(`/habits/${id}/analytics?range_days=${rangeDays}`),
+
+  compareHabits: (id1: string, id2: string, days = 30) =>
+    request<any>(`/habits/compare?habit_id_1=${id1}&habit_id_2=${id2}&range_days=${days}`),
+
   deleteHabit: (id: string) =>
-    request<{ status: string }>(`/habits/${id}`, { method: 'DELETE' }),
+    request<{ message: string; id: string }>(`/habits/${id}`, { method: 'DELETE' }),
+
+  // My Life Journal
+  getJournalEntries: (params?: { date?: string; start_date?: string; end_date?: string; category?: string; tag?: string; mood?: string; q?: string; archived?: boolean }) => {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
+    return request<JournalEntry[]>(`/journal${query ? `?${query}` : ''}`);
+  },
+
+  getEntriesByDate: (date: string) =>
+    request<JournalEntry[]>(`/journal/dates/${date}`),
+
+  getJournalCalendar: (year?: number, month?: number) => {
+    let url = '/journal/calendar';
+    const params: string[] = [];
+    if (year) params.push(`year=${year}`);
+    if (month) params.push(`month=${month}`);
+    if (params.length) url += `?${params.join('&')}`;
+    return request<{ calendar_days: JournalCalendarDay[]; total_active_days: number }>(url);
+  },
+
+  searchJournal: (q: string, category?: string, tag?: string) => {
+    let url = `/journal/search?q=${encodeURIComponent(q)}`;
+    if (category) url += `&category=${encodeURIComponent(category)}`;
+    if (tag) url += `&tag=${encodeURIComponent(tag)}`;
+    return request<{ query: string; total_results: number; results: Array<{ entry: JournalEntry; snippet: string; matched_in: string }> }>(url);
+  },
+
+  createJournalEntry: (data: Partial<JournalEntry>) =>
+    request<JournalEntry>('/journal', { method: 'POST', body: JSON.stringify(data) }),
+
+  getJournalEntry: (id: string) =>
+    request<JournalEntry>(`/journal/${id}`),
+
+  updateJournalEntry: (id: string, data: Partial<JournalEntry>) =>
+    request<JournalEntry>(`/journal/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  deleteJournalEntry: (id: string) =>
+    request<{ message: string; id: string }>(`/journal/${id}`, { method: 'DELETE' }),
+
+  toggleArchiveJournalEntry: (id: string) =>
+    request<{ id: string; archived: boolean }>(`/journal/${id}/archive`, { method: 'POST' }),
+
+  exportJournalMarkdown: async (startDate?: string, endDate?: string): Promise<string> => {
+    let url = `${API_BASE}/journal/export?format=markdown`;
+    if (startDate && endDate) url += `&start_date=${startDate}&end_date=${endDate}`;
+    const token = localStorage.getItem('lifeos_token');
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    return res.text();
+  },
+
+  // Daily Life Summary
+  generateDailySummary: (date: string) =>
+    request<DailySummary>(`/daily-summary/generate?date=${date}`, { method: 'POST' }),
+
+  saveDailySummary: (data: Partial<DailySummary>) =>
+    request<DailySummary>('/daily-summary/save', { method: 'POST', body: JSON.stringify(data) }),
+
+  getSavedDailySummary: (date: string) =>
+    request<{ saved: boolean; summary: DailySummary | null }>(`/daily-summary/${date}`),
+
+  exportDailySummaryMarkdown: async (date: string): Promise<string> => {
+    const url = `${API_BASE}/daily-summary/export/${date}`;
+    const token = localStorage.getItem('lifeos_token');
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    return res.text();
+  },
 
   // Goals
   getGoals: () =>
