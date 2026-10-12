@@ -100,3 +100,19 @@ async def test_focus_habits_goals_and_reviews_flow(client):
     assert rev_resp.status_code == 200
     assert rev_resp.json()["verified_focus_minutes"] >= 25
     assert rev_resp.json()["verified_habits_completed"] >= 1
+
+    # 6. Monthly Report test
+    monthly_resp = await client.get("/api/reports/monthly", headers=headers)
+    assert monthly_resp.status_code == 200
+    monthly_data = monthly_resp.json()
+    assert monthly_data["report_type"] == "monthly"
+    assert "daily_timeseries" in monthly_data
+    assert "weekly_breakdown" in monthly_data
+    assert "habit_matrix" in monthly_data
+    assert "life_domains" in monthly_data
+    assert "day_of_week_distribution" in monthly_data
+    assert "executive_scorecard" in monthly_data
+    assert "circadian_slots" in monthly_data
+    assert len(monthly_data["daily_timeseries"]) >= 28
+    assert len(monthly_data["day_of_week_distribution"]) == 7
+    assert len(monthly_data["life_domains"]) == 6

@@ -182,6 +182,9 @@ export const api = {
   getWeeklyReport: (endDate?: string) =>
     request<any>(`/reports/weekly${endDate ? `?end_date=${endDate}` : ''}`),
 
+  getMonthlyReport: (month?: string) =>
+    request<any>(`/reports/monthly${month ? `?month=${month}` : ''}`),
+
   // Settings
   updatePreferences: (prefs: UserPreferences) =>
     request<User>('/settings/preferences', { method: 'PUT', body: JSON.stringify(prefs) }),

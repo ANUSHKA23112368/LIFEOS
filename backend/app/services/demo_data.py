@@ -139,6 +139,165 @@ class DemoDataService:
             }
         ]
 
+        # Generate 29 preceding days of history for monthly summary charts
+        for d_offset in range(1, 30):
+            day_dt = today - timedelta(days=d_offset)
+            d_str = day_dt.strftime("%Y-%m-%d")
+
+            # 1. Planned deep work
+            p_mins = 120 if d_offset % 7 < 5 else 60
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Deep Work Sprint",
+                "category": "deep_work",
+                "start_time": f"{d_str}T09:00:00Z",
+                "end_time": f"{d_str}T{9 + (p_mins // 60):02d}:{p_mins % 60:02d}:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "planned",
+                "source": "schedule",
+                "duration_minutes": p_mins,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+
+            # 2. Actual deep work (with realistic variance)
+            variance = ((d_offset * 13) % 45) - 15  # -15 to +30 mins variance
+            a_mins = max(45, p_mins + variance)
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Deep Work Sprint",
+                "category": "deep_work",
+                "start_time": f"{d_str}T09:15:00Z",
+                "end_time": f"{d_str}T{9 + (a_mins // 60):02d}:{a_mins % 60:02d}:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "actual",
+                "source": "timer",
+                "duration_minutes": a_mins,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+
+            # 3. Learning / study
+            s_mins = 60 + ((d_offset * 7) % 40)
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Skill Practice & Reading",
+                "category": "study",
+                "start_time": f"{d_str}T14:30:00Z",
+                "end_time": f"{d_str}T{14 + (s_mins // 60):02d}:{s_mins % 60:02d}:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "actual",
+                "source": "manual",
+                "duration_minutes": s_mins,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+
+            # 4. Exercise (planned & actual on weekdays and select weekend days)
+            if d_offset % 7 not in (0, 6) or d_offset % 3 == 0:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "title": "Cardio & Strength Training",
+                    "category": "exercise",
+                    "start_time": f"{d_str}T17:30:00Z",
+                    "end_time": f"{d_str}T18:15:00Z",
+                    "date": d_str,
+                    "timezone": "UTC",
+                    "record_type": "planned",
+                    "source": "schedule",
+                    "duration_minutes": 45,
+                    "created_at": now.isoformat(),
+                    "updated_at": now.isoformat()
+                })
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "title": "Cardio & Strength Training",
+                    "category": "exercise",
+                    "start_time": f"{d_str}T17:35:00Z",
+                    "end_time": f"{d_str}T18:25:00Z",
+                    "date": d_str,
+                    "timezone": "UTC",
+                    "record_type": "actual",
+                    "source": "manual",
+                    "duration_minutes": 50,
+                    "created_at": now.isoformat(),
+                    "updated_at": now.isoformat()
+                })
+
+            # 5. Meals / Nourishment
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Healthy Meals & Nutrition",
+                "category": "meals",
+                "start_time": f"{d_str}T12:00:00Z",
+                "end_time": f"{d_str}T13:00:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "planned",
+                "source": "schedule",
+                "duration_minutes": 60,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Healthy Meals & Nutrition",
+                "category": "meals",
+                "start_time": f"{d_str}T12:05:00Z",
+                "end_time": f"{d_str}T12:55:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "actual",
+                "source": "manual",
+                "duration_minutes": 50,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+
+            # 6. Leisure / Reading / Wind-down
+            activities.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": "Wind-down & Reading",
+                "category": "leisure",
+                "start_time": f"{d_str}T20:30:00Z",
+                "end_time": f"{d_str}T21:15:00Z",
+                "date": d_str,
+                "timezone": "UTC",
+                "record_type": "actual",
+                "source": "manual",
+                "duration_minutes": 45,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
+            })
+
+            # 5. Focus sessions
+            foc_dur = 45 if d_offset % 2 == 0 else 50
+            focus_sessions.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "start_time": f"{d_str}T09:15:00Z",
+                "end_time": f"{d_str}T10:00:00Z",
+                "intended_duration_minutes": foc_dur,
+                "actual_duration_minutes": foc_dur,
+                "status": "completed",
+                "category": "deep_work",
+                "interruptions": (d_offset % 3),
+                "notes": f"Focus sprint day -{d_offset}",
+                "reflection": "Solid flow and progress.",
+                "created_at": now.isoformat()
+            })
+
         # Tasks
         tasks = [
             {
@@ -217,6 +376,27 @@ class DemoDataService:
             }
         ]
 
+        # Add completed tasks for preceding days
+        for d_offset in range(1, 30):
+            day_dt = today - timedelta(days=d_offset)
+            d_str = day_dt.strftime("%Y-%m-%d")
+            tasks.append({
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": f"Sprint Task #{30 - d_offset}",
+                "description": "Completed project development increment",
+                "status": "completed",
+                "priority": "medium" if d_offset % 2 == 0 else "high",
+                "category": "deep_work" if d_offset % 2 == 0 else "study",
+                "estimated_duration_minutes": 45,
+                "actual_duration_minutes": 55,
+                "deadline": f"{d_str}T18:00:00Z",
+                "subtasks": [],
+                "tags": ["sprint"],
+                "created_at": now.isoformat(),
+                "completed_at": f"{d_str}T17:00:00Z"
+            })
+
         # Focus Sessions
         focus_sessions = [
             {
@@ -264,10 +444,10 @@ class DemoDataService:
                 "status": "active",
                 "color": "#10B981",
                 "current_streak": 5,
-                "longest_streak": 12,
+                "longest_streak": 14,
                 "completions": [
-                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 1.0, "completed": True}
-                    for i in range(5)
+                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 1.0, "completed": (i % 6 != 0)}
+                    for i in range(30)
                 ],
                 "created_at": now.isoformat()
             },
@@ -280,14 +460,14 @@ class DemoDataService:
                 "frequency": "daily",
                 "target": 20.0,
                 "unit": "pages",
-                "start_date": (today - timedelta(days=10)).strftime("%Y-%m-%d"),
+                "start_date": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
                 "status": "active",
                 "color": "#8B5CF6",
                 "current_streak": 4,
-                "longest_streak": 8,
+                "longest_streak": 11,
                 "completions": [
-                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 20.0, "completed": True}
-                    for i in range(4)
+                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 20.0, "completed": (i % 5 != 0)}
+                    for i in range(30)
                 ],
                 "created_at": now.isoformat()
             },
@@ -300,14 +480,14 @@ class DemoDataService:
                 "frequency": "daily",
                 "target": 1.0,
                 "unit": "times",
-                "start_date": (today - timedelta(days=7)).strftime("%Y-%m-%d"),
+                "start_date": (today - timedelta(days=30)).strftime("%Y-%m-%d"),
                 "status": "active",
                 "color": "#6366F1",
                 "current_streak": 3,
-                "longest_streak": 6,
+                "longest_streak": 9,
                 "completions": [
-                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 1.0, "completed": True}
-                    for i in range(3)
+                    {"date": (today - timedelta(days=i)).strftime("%Y-%m-%d"), "value": 1.0, "completed": (i % 4 != 0)}
+                    for i in range(30)
                 ],
                 "created_at": now.isoformat()
             }

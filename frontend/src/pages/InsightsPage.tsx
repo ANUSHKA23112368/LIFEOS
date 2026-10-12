@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { AnalyticsSummary } from '../types';
 import { api } from '../services/api';
-import { BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, Sparkles, PieChart as PieIcon, ArrowRight } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 export const InsightsPage: React.FC = () => {
-  const [timeframe, setTimeframe] = useState<string>('last_7_days');
+  const [timeframe, setTimeframe] = useState<string>('last_30_days');
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   const loadData = async () => {
     try {
@@ -37,12 +39,12 @@ export const InsightsPage: React.FC = () => {
             <span>Life Insights & Analytics</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Deterministic calculations operating on real database records. No invented metrics.
+            Deterministic calculations operating on real database records. Inspect daily, weekly, and 30-day patterns.
           </p>
         </div>
 
         {/* Timeframe Pill Selector */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-lg text-xs font-medium">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-medium">
           {[
             { id: 'today', label: 'Today' },
             { id: 'yesterday', label: 'Yesterday' },
@@ -52,9 +54,9 @@ export const InsightsPage: React.FC = () => {
             <button
               key={tf.id}
               onClick={() => setTimeframe(tf.id)}
-              className={`px-3 py-1.5 rounded-md transition ${
+              className={`px-3 py-1.5 rounded-lg transition ${
                 timeframe === tf.id
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-semibold'
+                  ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
@@ -64,28 +66,145 @@ export const InsightsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Bar Chart: Plan vs Reality */}
-      <div className="bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-          Plan vs. Reality Duration Variance ({summary?.date_range_label})
-        </h2>
-        <div className="h-72 w-full">
-          {summary?.plan_vs_reality && summary.plan_vs_reality.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.plan_vs_reality}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="category_name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px', color: '#fff' }} />
-                <Bar dataKey="planned_minutes" name="Planned (mins)" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="actual_minutes" name="Recorded (mins)" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-full flex items-center justify-center text-xs text-slate-400">
-              No recorded variance data available for this timeframe.
+      {/* Monthly Report Quick Banner */}
+      {timeframe === 'last_30_days' && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-sky-500/10 to-emerald-500/10 border border-indigo-500/20 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
+              <Sparkles size={20} />
             </div>
-          )}
+            <div>
+              <div className="font-bold text-sm text-slate-900 dark:text-white">
+                Monthly Executive Intelligence Summary Available
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Explore the 30-day area graph, 4-week progression breakdown, and habit calendar heatmap grid.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/reports')}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+          >
+            <span>Open Monthly Report</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Numerical Metrics Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 space-y-1">
+          <div className="text-xs text-slate-500 flex items-center justify-between">
+            <span>Recorded Time</span>
+            <Clock size={15} className="text-indigo-500" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">
+            {Math.floor((summary?.total_recorded_minutes || 0) / 60)}h {(summary?.total_recorded_minutes || 0) % 60}m
+          </div>
+          <div className="text-[11px] text-slate-500">
+            Planned: {Math.floor((summary?.total_planned_minutes || 0) / 60)}h
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 space-y-1">
+          <div className="text-xs text-slate-500 flex items-center justify-between">
+            <span>Duration Variance</span>
+            <TrendingUp size={15} className="text-emerald-500" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">
+            {(summary?.time_variance_minutes || 0) >= 0 ? '+' : ''}
+            {Math.floor((summary?.time_variance_minutes || 0) / 60)}h {Math.abs(summary?.time_variance_minutes || 0) % 60}m
+          </div>
+          <div className="text-[11px] text-slate-500">
+            Actual vs. planned intention
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 space-y-1">
+          <div className="text-xs text-slate-500 flex items-center justify-between">
+            <span>Focus Endurance</span>
+            <Clock size={15} className="text-amber-500" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">
+            {Math.floor((summary?.total_focus_minutes || 0) / 60)}h {(summary?.total_focus_minutes || 0) % 60}m
+          </div>
+          <div className="text-[11px] text-slate-500">
+            {summary?.completed_focus_sessions || 0} completed sprints
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 space-y-1">
+          <div className="text-xs text-slate-500 flex items-center justify-between">
+            <span>Tasks Executed</span>
+            <CheckCircle size={15} className="text-emerald-500" />
+          </div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">
+            {summary?.tasks_completed || 0} / {summary?.tasks_total || 0}
+          </div>
+          <div className="text-[11px] text-slate-500">
+            {summary?.task_completion_rate || 0}% Completion Rate
+          </div>
+        </div>
+      </div>
+
+      {/* Main Charts: Plan vs Reality & Category Allocation */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            Plan vs. Reality Duration Variance ({summary?.date_range_label})
+          </h2>
+          <div className="h-72 w-full">
+            {summary?.plan_vs_reality && summary.plan_vs_reality.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={summary.plan_vs_reality}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                  <XAxis dataKey="category_name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} unit="m" />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px', color: '#fff' }} />
+                  <Bar dataKey="planned_minutes" name="Planned (mins)" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="actual_minutes" name="Recorded (mins)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-xs text-slate-400">
+                No recorded variance data available for this timeframe.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#111625] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            Category Time Allocation ({summary?.date_range_label})
+          </h2>
+          <div className="h-72 w-full flex items-center justify-center">
+            {summary?.categories && summary.categories.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={summary.categories}
+                    dataKey="minutes"
+                    nameKey="category_name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={3}
+                  >
+                    {summary.categories.map((entry, idx) => (
+                      <Cell key={idx} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px', color: '#fff' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-xs text-slate-400">
+                No category records available for this timeframe.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
